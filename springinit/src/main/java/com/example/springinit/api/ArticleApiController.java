@@ -24,6 +24,49 @@ public class ArticleApiController {
     public List<Article> index() {
         return articleService.index();
     }
+    @GetMapping("/api/articles/{id}")
+    public Article show(@PathVariable Long id) {
+        return articleService.show(id);
+    }
+
+    // POST
+    @PostMapping("/api/articles")
+    public ResponseEntity<Article> create(@RequestBody ArticleForm dto) {
+        Article created = articleService.create(dto);
+        return (created != null) ?
+                ResponseEntity.status(HttpStatus.OK).body(created) :
+                ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+    }
+
+    // PATCH 수정.
+    @PatchMapping("/api/articles/{id}")
+    public ResponseEntity<Article> update(@PathVariable Long id,
+                                          @RequestBody ArticleForm dto) {
+        Article updated = articleService.update(id, dto);
+        return (updated != null) ? //원래는 예외 처리를 해야..
+                ResponseEntity.status(HttpStatus.OK).body(updated):
+                ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+    }
+
+    // DELETE
+    @DeleteMapping("/api/articles/{id}")
+    public ResponseEntity<Article> delete(@PathVariable Long id) {
+        Article deleted = articleService.delete(id);
+        return (deleted != null) ?
+                ResponseEntity.status(HttpStatus.NO_CONTENT).build() :
+                ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+    }
+
+
+    // 트랜잭션 -> 실패 -> 롤백! 과정 확인
+    @PostMapping("/api/transaction-test")
+    public ResponseEntity<List<Article>> transactionTest(@RequestBody List<ArticleForm> dtos) {
+        List<Article> createdList = articleService.createArticles(dtos);
+        return (createdList != null) ?
+                ResponseEntity.status(HttpStatus.OK).body(createdList) :
+                ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+    }
+
 
 // 여기는 서비스 계층 분리 전
 //    @Autowired
