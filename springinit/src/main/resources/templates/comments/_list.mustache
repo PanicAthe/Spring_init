@@ -3,11 +3,18 @@
         <div class="card m-2" id="comments-{{id}}">
             <div class="card-header">
                 {{nickname}}
-                <!-- Button trigger modal -->
                 <button type="button"
                         class="btn btn-sm btn-outline-primary"
                         data-bs-toggle="modal"
-                        data-bs-target="#comment-edit-modal">수정</button>
+                        data-bs-target="#comment-edit-modal"
+                        data-bs-id="{{id}}"
+                        data-bs-nickname="{{nickname}}"
+                        data-bs-body="{{body}}"
+                        data-bs-article-id="{{articleId}}">수정</button>
+                <!-- 댓글 삭제 버튼 -->
+                <button type="button"
+                        class="btn btn-sm btn-outline-danger comment-delete-btn"
+                data-comment-id="{{id}}">삭제</button>
             </div>
             <div class="card-body">
                 {{body}}
@@ -15,6 +22,7 @@
         </div>
     {{/commentDtos}}
 </div>
+
 <!-- Modal -->
 <div class="modal fade" id="comment-edit-modal" tabindex="-1">
     <div class="modal-dialog">
@@ -72,4 +80,70 @@
         document.querySelector("#edit-comment-article-id").value = articleId;
       });
     }
+
+    {
+  // 수정 완료 버튼
+  const commentUpdateBtn = document.querySelector("#comment-update-btn");
+  // 클릭 이벤트 처리
+  commentUpdateBtn.addEventListener("click", function() {
+    // 수정 댓글 객체 생성
+    const comment = {
+      id: document.querySelector("#edit-comment-id").value,
+      nickname: document.querySelector("#edit-comment-nickname").value,
+      body: document.querySelector("#edit-comment-body").value,
+      article_id: document.querySelector("#edit-comment-article-id").value
+    };
+    console.log(comment);
+    // 수정 REST API 호출 - fetch()
+    const url = "/api/comments/" + comment.id;
+    fetch(url, {
+      method: "PATCH",       // PATCH 요청
+      body: JSON.stringify(comment),  // 수정된 댓글 객체를 JSON으로 전달
+      headers: {
+        "Content-Type": "application/json" // JSON 타입임을 알려줌
+      }
+    }).then(response => {
+      // http 응답 코드에 따른 메시지 출력
+      const msg = (response.ok) ? "댓글이 수정 되었습니다." : "댓글 수정 실패..!";
+      alert(msg);
+      // 현재 페이지를 새로고침
+      window.location.reload();
+    });
+  });
+}
+</script>
+
+<!-- 댓글 삭제 -->
+<Script>
+    {
+      // 삭제 버튼 선택, 'All' 붙여야 삭제 버튼 리스트 가져옴
+      const commentDeleteBtns = document.querySelectorAll(".comment-delete-btn");
+
+      // 여러개의 삭제 버튼 이벤트를 처리 (forEach)
+      commentDeleteBtns.forEach(btn => {
+        // 각 버튼의 이벤트 처리를 등록
+        btn.addEventListener("click", (event) => {
+          // 이벤트 발생 요소를 선택
+          const commentDeleteBtn = event.target;
+
+          // 삭제 댓글 id 가져오기
+          const commentId = commentDeleteBtn.getAttribute("data-comment-id");
+          console.log(`삭제 버튼 클릭: ${commentId}번 댓글`);
+          // 삭제 API 호출 및 처리
+          const url = `/api/comments/${commentId}`;
+          fetch(url, {
+             method: "DELETE"
+          }).then(response => {
+          // 댓글 삭제 실패 처리
+            if (!response.ok) {
+            alert("댓글 삭제 실패..!");
+            return;
+          }
+          // 삭제 성공 시, 댓글을 화면에서 지움!
+          const target = document.querySelector(`#comments-${commentId}`);
+          target.remove(); // window.location.reload(); 와 달리 문서 자체에서 선택해서 삭제
+        });
+      });
+    });
+  }
 </script>
